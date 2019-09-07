@@ -55,7 +55,7 @@ class writeFormattedOutput(object):
         '''
         reads model parameters from "ZAU.pars"
         '''
-        name_keys = ["mod_num", "logZ", "Age", "logU", "logR", "logQ", "nH", "efrac"]
+        name_keys = ["mod_num", "logZ", "Age", "logU", "pAGB", "logR", "logQ", "nH", "efrac"]
         data = np.genfromtxt(self.file_pr+".pars", unpack=True)
         ddata = {}
         for i,key in enumerate(name_keys):
@@ -65,6 +65,8 @@ class writeFormattedOutput(object):
         self.NZ = len(np.unique(self.logZ))
         self.NA = len(np.unique(self.Age))
         self.NU = len(np.unique(self.logU))
+        self.NH = len(np.unique(self.nH))
+        self.NP = len(np.unique(self.pAGB))
         return
     def doLineOut(self, more_info=False, **kwargs):
         '''
@@ -92,7 +94,7 @@ class writeFormattedOutput(object):
         nlines = len(data_vac)
         nmods = np.max(self.mod_num)
         #print header to file
-        head_str = "#{0} cols {1:.0f} rows {2} logZ {3} Age {4} logU".format(nlines, nmods, self.NZ, self.NA, self.NU)
+        head_str = "#{0} cols {1:.0f} rows {2} logZ {3} Age {4} logU {5} pAGB {6} nH".format(nlines, nmods, self.NZ, self.NA, self.NU, self.NP, self.NH)
         f.write(head_str+"\n")
         #print lambda array
         p_str = " ".join(["{0:1.6e}".format(dat) for dat in data_vac])
@@ -103,7 +105,7 @@ class writeFormattedOutput(object):
         if more_info:
             tstr = linecache.getline(self.file_pr+'.pars', n)
         else:
-            tstr = "{0:2.4e} {1:2.4e} {2:2.4e}\n".format(self.logZ[n-1], self.Age[n-1], self.logU[n-1])
+            tstr = "{0:2.4e} {1:2.4e} {2:2.4e} {3:2.4e} {4:2.4e}\n".format(self.logZ[n-1], self.Age[n-1], self.logU[n-1], self.pAGB[n-1] ,self.nH[n-1])
         f.write(tstr)
         #read in and print emission line intensities (Lsun/Q)
         nst = "{0}".format(n)
@@ -120,6 +122,7 @@ class writeFormattedOutput(object):
             iind = num.astype(int)
             pars = dict(logZ=self.logZ[iind-1],
                         Age=self.Age[iind-1],
+                        pAGB=self.pAGB[iind - 1],
                         nH=self.nH[iind-1],
                         logQ=self.logQ[iind-1],
                         logU=self.logU[iind-1],
@@ -132,9 +135,11 @@ class writeFormattedOutput(object):
         return
     def printContFlu(self, f, pars):
         #write model parameters
-        tstr = "{0:2.4e} {1:2.4e} {2:2.4e}".format(pars["logZ"],
+        tstr = "{0:2.4e} {1:2.4e} {2:2.4e} {3:2.4e} {4:2.4e}".format(pars["logZ"],
                                                    pars["Age"],
-                                                   pars["logU"])
+                                                   pars["logU"],
+                                                   pars["pAGB"],
+                                                   pars["nH"])
         f.write(tstr+"\n")
         #read in and print emission line intensities
         nst = "{0}".format(pars["mod_num"])
@@ -160,7 +165,7 @@ class writeFormattedOutput(object):
         nlam = len(fsps_lam)
         nmods = np.max(self.mod_num).astype(int)
         #print header to file
-        head_str = "#{0} cols {1} rows {2} logZ {3} Age {4} logU".format(nlam, nmods, self.NZ, self.NA, self.NU)
+        head_str = "#{0} cols {1} rows {2} logZ {3} Age {4} logU {5} pAGB {6} nH".format(nlam, nmods, self.NZ, self.NA, self.NU, self.NP, self.NH)
         f.write(head_str+"\n")
         #print lambda array
         p_str = " ".join(["{0:1.6e}".format(lam) for lam in fsps_lam])

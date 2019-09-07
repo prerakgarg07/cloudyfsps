@@ -41,6 +41,8 @@ def cloudyInput(dir_, model_name, **kwargs):
             "par1val":5.0e6,
             "par2":"logz",
             "par2val":0.0,
+            "par3": "pagb",
+            "par3val": 0.0,
             "maxStellar":None,
             "use_extended_lines":False,
             "geometry":"sphere"
@@ -72,7 +74,7 @@ def cloudyInput(dir_, model_name, **kwargs):
     this_print('title {0}'.format(model_name.split('/')[-1]))
     this_print('////////////////////////////////////')
     this_print('set punch prefix "{0}"'.format(model_name))
-    this_print('set line precision 6')
+    this_print('print line precision 6')
     ####
     if pars['par1'] == "age":
         pars['par1val'] = pars['age']
@@ -83,7 +85,12 @@ def cloudyInput(dir_, model_name, **kwargs):
                 pars['par2val'] = pars['maxStellar']
             else:
                 pars['par2val'] = pars['logZ']
-    this_print('table star "{0}" {1}={2:.2e} {3}={4:.2e}'.format(pars['cloudy_mod'], pars['par1'], pars['par1val'],pars['par2'], pars['par2val']))
+    if pars['par3'] == "pagb":
+        pars['par3val'] = pars['pagb']
+
+    print (pars['par2val'], pars['par1val'], pars['logU'], pars['par3val'],pars['dens'])
+    this_print('table star "{0}" {1}={2:.2e} {3}={4:.2e} {5}={6:.2e}'.format(pars['cloudy_mod'], pars['par1'], pars['par1val'],
+                                                                 pars['par2'], pars['par2val'], pars['par3'], pars['par3val']))
     if pars['use_Q']:
         this_print('Q(H) = {0:.3f} log'.format(pars['logQ']))
     else:
@@ -104,9 +111,11 @@ def cloudyInput(dir_, model_name, **kwargs):
     else:
         r_out = pars['r_inner']
     if pars['use_extended_lines']:
-        linefile = pkg_resources.resource_filename(__name__,'data/cloudyLinesEXT.dat')
+        linefile = "cloudyLinesEXT.dat"
+        #linefile = pkg_resources.resource_filename(__name__,'data/cloudyLinesEXT.dat')
     else:
-        linefile = pkg_resources.resource_filename(__name__, 'data/cloudyLines.dat')
+        linefile = "cloudyLines.dat"
+        #linefile = pkg_resources.resource_filename(__name__, 'data/cloudyLines.dat')
     this_print('radius {0:.3f} log'.format(r_out))
     this_print('hden {0:.3f} log'.format(np.log10(pars['dens'])))
     this_print('{}'.format(pars['geometry']))
@@ -148,16 +157,16 @@ He 1 5875.61A
 He 2 1640.00A
 O  1 6300.00A
 O  1 6363.00A
-O II 3729.00A
-O II 3726.00A
+O  2 3729.00A
+O  2 3726.00A
 O  3 5007.00A
-TOTL 4363.00A
+blnd 4363.00A
 O  3 4959.00A
 O  3 51.8000m
 N  2 6584.00A
 N  2 6548.00A
-S II 6731.00A
-S II 6716.00A
+S  2 6731.00A
+S  2 6716.00A
 S  3 9069.00A
 S  3 9532.00A
 S  3 18.6700m
@@ -208,22 +217,24 @@ def runMake(dir_=None, n_proc=1, model_name=None):
     proc = subprocess.Popen(to_run, shell=True, stdout=stdout, stdin=stdin)
     proc.communicate()
 
+
 def printParFile(dir_, mod_prefix, pars):
     '''
     prints parameter file for easy parsing later
-    modnum, Z, a, U, R, logQ, n, efrac
+    modnum, Z, a, U, pagb, R, logQ, n, efrac
     '''
     outfile = "{}{}.pars".format(dir_, mod_prefix)
     f = open(outfile, "w")
     for i in range(len(pars)):
         par = pars[i]
         if len(par) > 7:
-            pstr = "{0} {1:.2f} {2:.2e} {3:.2f} {4:.2f} {5:.2f} {6:.2f} {7:.2f} {8:.2e}\n".format(i+1, *par)
+            pstr = "{0} {1:.2f} {2:.2e} {3:.2f} {4:.2e} {5:.2f} {6:.2f} {7:.2f} {8:.2e}\n".format(i + 1, *par)
         else:
-            pstr = "{0} {1:.2f} {2:.2e} {3:.2f} {4:.2f} {5:.2f} {6:.2f} {7:.2f}\n".format(i+1, *par)
+            pstr = "{0} {1:.2f} {2:.2e} {3:.2f} {4:.2e} {5:.2f} {6:.2f} {7:.2f}\n".format(i + 1, *par)
         f.write(pstr)
     f.close()
     return
+
 
 def writeParamFiles(**kwargs):
     '''
@@ -231,51 +242,56 @@ def writeParamFiles(**kwargs):
     can pass arrays of ages, logZs, logUs, nHs.
     cloudy_input.param_files(extras='extra line to add to input')
     '''
-    nom_dict = {"dir_":"./output/",
-                "model_prefix":"ZAU",
-                "ages":np.arange(1.0e6, 6.0e6, 1.0e6),
-                "logZs":np.linspace(-2.0, 0.2, 5),
-                "logQs":np.linspace(45,49, 5),
-                "logUs":np.linspace(-3.0, -1.0, 5),
-                "r_inners":np.array([19.]),
-                "nhs":np.array([100.0]),
-                "pc_to_cm":False,
-                "run_cloudy":False,
-                "set_name":"dopita",
-                "use_Q":True,
-                "dust":True,
-                "re_z":False,
-                "cloudy_mod":"FSPS_SPS.mod",
-                "verbose":False,
-                "efracs":np.array([-1.0]),
-                "geometry":"sphere",
-                "write_makefile":False,
-                "extras":"",
-                "extra_output":False}
-    for key, val in list(kwargs.items()):
+    nom_dict = {"dir_": "./output/",
+                "model_prefix": "ZAU",
+                "ages": np.arange(1.0e6, 6.0e6, 1.0e6),
+                "logZs": np.linspace(-2.0, 0.2, 5),
+                "logQs": np.linspace(45, 49, 5),
+                "logUs": np.linspace(-3.0, -1.0, 5),
+                "Pagbs": np.array([0.001, 0.01, 0.1, 0.5, 1]),
+                "r_inners": np.array([19.]),
+                "nhs": np.array([100.0]),
+                "pc_to_cm": False,
+                "run_cloudy": False,
+                "set_name": "dopita",
+                "use_Q": True,
+                "dust": True,
+                "re_z": False,
+                "cloudy_mod": "FSPS_SPS.mod",
+                "verbose": False,
+                "efracs": np.array([-1.0]),
+                "geometry": "sphere",
+                "write_makefile": False,
+                "extras": "",
+                "extra_output": False}
+    for key, val in kwargs.items():
         nom_dict[key] = val
     pars = kwargs.get("pars", None)
     if pars is None:
-        print("{} ages, {} logZs, {} logUs".format(len(nom_dict["ages"]),
+        print("{} ages, {} logZs, {} logUs {} Pagbs".format(len(nom_dict["ages"]),
                                                    len(nom_dict["logZs"]),
-                                                   len(nom_dict["logUs"])))
-        pars = [(Z, a, U, R, calcForLogQ(logU=U, Rinner=10.0**R, nh=n), n, efrac) for Z in nom_dict["logZs"] for a in nom_dict["ages"] for U in nom_dict["logUs"] for R in nom_dict["r_inners"] for n in nom_dict["nhs"] for efrac in nom_dict["efracs"]]
+                                                   len(nom_dict["logUs"]),
+                                                   len(nom_dict["Pagbs"])))
+        pars = [(Z, a, U, pagbs, R, calcForLogQ(logU=U, Rinner=10.0 ** R, nh=n), n, efrac) for Z in nom_dict["logZs"] for a in
+                nom_dict["ages"] for U in nom_dict["logUs"] for pagbs in nom_dict['Pagbs'] for R in nom_dict["r_inners"] for n in nom_dict["nhs"] for
+                efrac in nom_dict["efracs"]]
     # Z, a, U, R, Q, n, efrac
     print("{} models".format(len(pars)))
-    full_model_names = ["{}{}".format(nom_dict["model_prefix"], n+1)
+    full_model_names = ["{}{}".format(nom_dict["model_prefix"], n + 1)
                         for n in range(len(pars))]
     printParFile(nom_dict["dir_"], nom_dict["model_prefix"], pars)
-    #--------------------------------------------
+    # --------------------------------------------
     for par, name in zip(pars, full_model_names):
         cloudyInput(nom_dict["dir_"],
                     name,
                     logZ=par[0],
                     age=par[1],
                     logU=par[2],
-                    r_inner=par[3],
-                    logQ=par[4],
-                    dens=par[5],
-                    efrac=par[6],
+                    pagb=par[3],
+                    r_inner=par[4],
+                    logQ=par[5],
+                    dens=par[6],
+                    efrac=par[7],
                     set_name=nom_dict["set_name"],
                     use_Q=nom_dict["use_Q"],
                     dust=nom_dict["dust"],
@@ -285,9 +301,9 @@ def writeParamFiles(**kwargs):
                     geometry=nom_dict["geometry"],
                     extras=nom_dict["extras"],
                     extra_output=nom_dict["extra_output"])
-    #--------------------------------------------
+    # --------------------------------------------
     if nom_dict["write_makefile"]:
         writeMake(dir_=nom_dict["dir_"])
-    #--------------------------------------------
+    # --------------------------------------------
     if nom_dict["run_cloudy"]:
         runMake(dir_=nom_dict["dir_"], n_proc=4, model_name=nom_dict["model_prefix"])
