@@ -35,7 +35,7 @@ class writeASCII(object):
     def __init__(self, outfile, lam, flu, modpars, **kwargs):
         self.nom_dict = {'nmod': 94, 'ndim': 1, 'npar':1, 'nx':1963,
                          'x':'lambda', 'conv1':1.0, 'peraa':False,
-                         'conv2':3.839e33, 'par1':'age', 'par2':'logz'}
+                         'conv2':3.839e33, 'par1':'age', 'par2':'logz','par3':'pagb'}
         self.init_pars(**kwargs)
         self.file = open('/'.join([CLOUDY_DATA_PATH,outfile]), 'w')
         self.write_header(modpars)
@@ -60,6 +60,7 @@ class writeASCII(object):
         self.file.write("  %s\n" %self.nom_dict['par1']) #first param
         if self.nom_dict['npar'] > 1:
             self.file.write("  %s\n" %self.nom_dict['par2']) #second param
+            self.file.write("  %s\n" % self.nom_dict['par3'])  # third param
         self.file.write("  %i\n" %self.nom_dict['nmod']) #total number of mods
         self.file.write("  %i\n" %self.nom_dict['nx']) #number of lam pts
         self.file.write("  %s\n" %self.nom_dict['x']) #lambda or freq
@@ -68,7 +69,7 @@ class writeASCII(object):
         self.file.write("  %.8e\n" %self.nom_dict['conv2'])#units
         for chunk in grouper(4, modpars):
             if self.nom_dict['npar'] > 1:
-                self.file.write("  " + "  ".join("{0:<8.2e}{1:>10.2e}".format(x[0], x[1]) for x in chunk) + "\n")
+                self.file.write("  " + "  ".join("{0:<8.2e}{1:>10.2e}{2:>10.2e}".format(x[0], x[1], x[2]) for x in chunk) + "\n")
             else:
                 self.file.write("  " + "  ".join("{0:>4.2e}".format(x) for x in chunk) + "\n")
 

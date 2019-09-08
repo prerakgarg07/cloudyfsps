@@ -52,7 +52,7 @@ def cloudyInput(dir_, model_name, **kwargs):
     # -----
     if pars["to_file"]:
         file_name = dir_+model_name+".in"
-        f = file(file_name, "w")
+        f = open(file_name, "w")
     def this_print(s, eol=True):
         if s is None:
             print('"None" parameter not printed')
