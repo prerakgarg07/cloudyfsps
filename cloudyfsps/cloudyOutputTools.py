@@ -95,7 +95,8 @@ def formatCloudyOutput(dir_, model_prefix, modnum, modpars, use_extended_lines=F
     diffuse_y = interp1d(ang_v, diffuse_in, fill_value=0.0, bounds_error=False)(fsps_lam)
     ##
     # diffuse continuum
-    diffuse_out = (diffuse_y) / nu * dist_fact / (10.**logQ) / lsun
+    #diffuse_out = (diffuse_y) / nu * dist_fact / (10.**logQ) / lsun
+    diffuse_out = (diffuse_y) / nu / (10.**logQ) / lsun
     ##
     inidata = np.genfromtxt(incontfl, skip_header=1)
     incid_0 = inidata[:,1]

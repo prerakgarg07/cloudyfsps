@@ -50,7 +50,7 @@ def cloudyInput(dir_, model_name, **kwargs):
     # -----
     if pars["to_file"]:
         file_name = dir_+model_name+".in"
-        f = file(file_name, "w")
+        f = open(file_name, "w")
     def this_print(s, eol=True):
         if s is None:
             print('"None" parameter not printed')
@@ -72,7 +72,7 @@ def cloudyInput(dir_, model_name, **kwargs):
     this_print('title {0}'.format(model_name.split('/')[-1]))
     this_print('////////////////////////////////////')
     this_print('set punch prefix "{0}"'.format(model_name))
-    this_print('set line precision 6')
+    this_print('print line precision 6')
     ####
     if pars['par1'] == "age":
         pars['par1val'] = pars['age']
@@ -104,9 +104,9 @@ def cloudyInput(dir_, model_name, **kwargs):
     else:
         r_out = pars['r_inner']
     if pars['use_extended_lines']:
-        linefile = pkg_resources.resource_filename(__name__,'data/cloudyLinesEXT.dat')
+        linefile = 'cloudyLinesEXT.dat'
     else:
-        linefile = pkg_resources.resource_filename(__name__, 'data/cloudyLines.dat')
+        linefile = 'cloudyLines.dat'
     this_print('radius {0:.3f} log'.format(r_out))
     this_print('hden {0:.3f} log'.format(np.log10(pars['dens'])))
     this_print('{}'.format(pars['geometry']))
